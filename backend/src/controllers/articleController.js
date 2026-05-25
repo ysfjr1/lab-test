@@ -4,9 +4,9 @@ const ApiError = require("../utils/ApiError");
 const ITEMS_PER_PAGE = 6;
 
 const populateArticle = [
-  { path: "author", select: "name email role" },
-  { path: "category", select: "name slug description" },
-  { path: "tags", select: "name slug" },
+  { path: "author", select: "name email role createdAt" },
+  { path: "category", select: "name slug description createdAt" },
+  { path: "tags", select: "name slug createdAt" },
 ];
 
 exports.getAll = async (req, res) => {

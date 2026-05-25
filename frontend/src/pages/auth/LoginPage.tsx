@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { isAxiosError } from "axios";
 import { useAuth } from "@/hooks/useAuth";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
@@ -19,8 +20,12 @@ export default function LoginPage() {
     try {
       await login(email, password);
       navigate("/dashboard");
-    } catch {
-      setError("Invalid email or password.");
+    } catch (err) {
+      setError(
+        isAxiosError(err)
+          ? (err.response?.data?.message ?? "Invalid email or password.")
+          : "Invalid email or password."
+      );
     } finally {
       setLoading(false);
     }

@@ -3,9 +3,9 @@ const Category = require("../models/Category");
 const User = require("../models/User");
 
 const populateArticle = [
-  { path: "author", select: "name email role" },
-  { path: "category", select: "name slug" },
-  { path: "tags", select: "name slug" },
+  { path: "author", select: "name email role createdAt" },
+  { path: "category", select: "name slug description createdAt" },
+  { path: "tags", select: "name slug createdAt" },
 ];
 
 exports.getStats = async (req, res) => {

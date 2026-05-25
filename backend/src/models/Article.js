@@ -39,6 +39,12 @@ articleSchema.pre("save", function (next) {
   next();
 });
 
+articleSchema.methods.toJSON = function () {
+  const obj = this.toObject();
+  delete obj.__v;
+  return obj;
+};
+
 articleSchema.index({ title: "text", content: "text" });
 
 module.exports = mongoose.model("Article", articleSchema);

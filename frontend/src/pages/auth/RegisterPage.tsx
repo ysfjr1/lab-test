@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { isAxiosError } from "axios";
 import { useAuth } from "@/hooks/useAuth";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
@@ -32,8 +33,12 @@ export default function RegisterPage() {
     try {
       await register(name, email, password);
       navigate("/dashboard");
-    } catch {
-      setError("Registration failed. Please try again.");
+    } catch (err) {
+      setError(
+        isAxiosError(err)
+          ? (err.response?.data?.message ?? "Registration failed. Please try again.")
+          : "Registration failed. Please try again."
+      );
     } finally {
       setLoading(false);
     }

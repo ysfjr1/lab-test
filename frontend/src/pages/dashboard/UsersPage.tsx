@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { User } from "@/types";
 import { userService } from "@/api/services";
+import { useAuth } from "@/hooks/useAuth";
 import Badge from "@/components/ui/Badge";
 import { TableRowSkeleton } from "@/components/ui/Skeleton";
 import EmptyState from "@/components/ui/EmptyState";
@@ -11,6 +12,7 @@ const roleBadgeVariant: Record<User["role"], "info" | "success" | "default"> = {
 };
 
 export default function UsersPage() {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -78,12 +80,14 @@ export default function UsersPage() {
                       {new Date(user.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-5 py-3 text-right">
-                      <button
-                        onClick={() => handleDelete(user._id)}
-                        className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
-                      >
-                        Remove
-                      </button>
+                      {currentUser && user._id !== currentUser._id && (
+                        <button
+                          onClick={() => handleDelete(user._id)}
+                          className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
+                        >
+                          Remove
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

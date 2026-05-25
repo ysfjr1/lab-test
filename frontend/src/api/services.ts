@@ -9,45 +9,34 @@ import type {
   Tag,
   User,
 } from "@/types";
-import {
-  dummyArticles,
-  dummyCategories,
-  dummyStats,
-  dummyTags,
-  dummyUsers,
-} from "@/data/dummy";
-
-const delay = (ms = 400) => new Promise((r) => setTimeout(r, ms));
-
-const ITEMS_PER_PAGE = 6;
+import api from "./axios";
 
 // ─── Auth ───────────────────────────────────────────────
 export const authService = {
-  async login(email: string, _password: string): Promise<AuthResponse> {
-    await delay();
-    const user = dummyUsers.find((u) => u.email === email) ?? dummyUsers[0];
-    return { token: "dummy-jwt-token-" + user._id, user };
+  async login(email: string, password: string): Promise<AuthResponse> {
+    const { data } = await api.post<AuthResponse>("/auth/login", {
+      email,
+      password,
+    });
+    return data;
   },
 
   async register(
     name: string,
     email: string,
-    _password: string
+    password: string
   ): Promise<AuthResponse> {
-    await delay();
-    const user: User = {
-      _id: "u-new-" + Date.now(),
+    const { data } = await api.post<AuthResponse>("/auth/register", {
       name,
       email,
-      role: "author",
-      createdAt: new Date().toISOString(),
-    };
-    return { token: "dummy-jwt-token-" + user._id, user };
+      password,
+    });
+    return data;
   },
 
   async getProfile(): Promise<User> {
-    await delay(200);
-    return dummyUsers[0];
+    const { data } = await api.get<User>("/auth/me");
+    return data;
   },
 };
 
@@ -56,240 +45,138 @@ export const articleService = {
   async getAll(
     filters: ArticleFilters = {}
   ): Promise<PaginatedResponse<Article>> {
-    await delay();
-    let results = [...dummyArticles];
+    const params: Record<string, string> = {};
+    if (filters.search) params.search = filters.search;
+    if (filters.category) params.category = filters.category;
+    if (filters.tag) params.tag = filters.tag;
+    if (filters.sort) params.sort = filters.sort;
+    if (filters.page) params.page = String(filters.page);
 
-    if (filters.status) {
-      results = results.filter((a) => a.status === filters.status);
-    } else {
-      results = results.filter((a) => a.status === "published");
-    }
-
-    if (filters.search) {
-      const q = filters.search.toLowerCase();
-      results = results.filter(
-        (a) =>
-          a.title.toLowerCase().includes(q) ||
-          a.excerpt.toLowerCase().includes(q)
-      );
-    }
-
-    if (filters.category) {
-      results = results.filter((a) => a.category.slug === filters.category);
-    }
-
-    if (filters.tag) {
-      results = results.filter((a) =>
-        a.tags.some((t) => t.slug === filters.tag)
-      );
-    }
-
-    if (filters.sort === "views") {
-      results.sort((a, b) => b.views - a.views);
-    } else {
-      results.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-    }
-
-    const page = filters.page ?? 1;
-    const start = (page - 1) * ITEMS_PER_PAGE;
-    const paginated = results.slice(start, start + ITEMS_PER_PAGE);
-
-    return {
-      data: paginated,
-      page,
-      totalPages: Math.ceil(results.length / ITEMS_PER_PAGE),
-      total: results.length,
-    };
+    const { data } = await api.get<PaginatedResponse<Article>>("/articles", {
+      params,
+    });
+    return data;
   },
 
   async getAllAdmin(
     filters: ArticleFilters = {}
   ): Promise<PaginatedResponse<Article>> {
-    await delay();
-    let results = [...dummyArticles];
+    const params: Record<string, string> = {};
+    if (filters.search) params.search = filters.search;
+    if (filters.status) params.status = filters.status;
+    if (filters.page) params.page = String(filters.page);
+    if (filters.authorId) params.authorId = filters.authorId;
 
-    if (filters.authorId) {
-      results = results.filter((a) => a.author._id === filters.authorId);
-    }
-
-    if (filters.status && filters.status !== "all") {
-      results = results.filter((a) => a.status === filters.status);
-    }
-
-    if (filters.search) {
-      const q = filters.search.toLowerCase();
-      results = results.filter((a) => a.title.toLowerCase().includes(q));
-    }
-
-    results.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    const { data } = await api.get<PaginatedResponse<Article>>(
+      "/articles/admin",
+      { params }
     );
-
-    const page = filters.page ?? 1;
-    const start = (page - 1) * ITEMS_PER_PAGE;
-    const paginated = results.slice(start, start + ITEMS_PER_PAGE);
-
-    return {
-      data: paginated,
-      page,
-      totalPages: Math.ceil(results.length / ITEMS_PER_PAGE),
-      total: results.length,
-    };
+    return data;
   },
 
   async getBySlug(slug: string): Promise<Article | undefined> {
-    await delay();
-    return dummyArticles.find((a) => a.slug === slug);
+    try {
+      const { data } = await api.get<Article>(`/articles/slug/${slug}`);
+      return data;
+    } catch {
+      return undefined;
+    }
   },
 
   async getById(id: string): Promise<Article | undefined> {
-    await delay();
-    return dummyArticles.find((a) => a._id === id);
+    try {
+      const { data } = await api.get<Article>(`/articles/${id}`);
+      return data;
+    } catch {
+      return undefined;
+    }
   },
 
   async getRelated(articleId: string): Promise<Article[]> {
-    await delay(200);
-    const article = dummyArticles.find((a) => a._id === articleId);
-    if (!article) return [];
-    return dummyArticles
-      .filter(
-        (a) =>
-          a._id !== articleId &&
-          a.status === "published" &&
-          (a.category._id === article.category._id ||
-            a.tags.some((t) => article.tags.some((at) => at._id === t._id)))
-      )
-      .slice(0, 3);
+    const { data } = await api.get<Article[]>(
+      `/articles/${articleId}/related`
+    );
+    return data;
   },
 
-  async create(_data: ArticleFormData): Promise<Article> {
-    await delay();
-    return dummyArticles[0];
+  async create(formData: ArticleFormData): Promise<Article> {
+    const { data } = await api.post<Article>("/articles", formData);
+    return data;
   },
 
-  async update(_id: string, _data: Partial<ArticleFormData>): Promise<Article> {
-    await delay();
-    return dummyArticles[0];
+  async update(id: string, formData: Partial<ArticleFormData>): Promise<Article> {
+    const { data } = await api.put<Article>(`/articles/${id}`, formData);
+    return data;
   },
 
-  async delete(_id: string): Promise<void> {
-    await delay();
+  async delete(id: string): Promise<void> {
+    await api.delete(`/articles/${id}`);
   },
 };
 
 // ─── Categories ─────────────────────────────────────────
 export const categoryService = {
   async getAll(): Promise<Category[]> {
-    await delay();
-    return dummyCategories;
+    const { data } = await api.get<Category[]>("/categories");
+    return data;
   },
 
-  async create(data: {
-    name: string;
-    description?: string;
-  }): Promise<Category> {
-    await delay();
-    return {
-      _id: "c-new-" + Date.now(),
-      name: data.name,
-      slug: data.name.toLowerCase().replace(/\s+/g, "-"),
-      description: data.description,
-      articleCount: 0,
-      createdAt: new Date().toISOString(),
-    };
+  async create(payload: { name: string; description?: string }): Promise<Category> {
+    const { data } = await api.post<Category>("/categories", payload);
+    return data;
   },
 
   async update(
     id: string,
-    data: { name: string; description?: string }
+    payload: { name: string; description?: string }
   ): Promise<Category> {
-    await delay();
-    const cat = dummyCategories.find((c) => c._id === id);
-    return {
-      ...cat!,
-      ...data,
-      slug: data.name.toLowerCase().replace(/\s+/g, "-"),
-    };
+    const { data } = await api.put<Category>(`/categories/${id}`, payload);
+    return data;
   },
 
-  async delete(_id: string): Promise<void> {
-    await delay();
+  async delete(id: string): Promise<void> {
+    await api.delete(`/categories/${id}`);
   },
 };
 
 // ─── Tags ───────────────────────────────────────────────
 export const tagService = {
   async getAll(): Promise<Tag[]> {
-    await delay();
-    return dummyTags;
+    const { data } = await api.get<Tag[]>("/tags");
+    return data;
   },
 
-  async create(data: { name: string }): Promise<Tag> {
-    await delay();
-    return {
-      _id: "t-new-" + Date.now(),
-      name: data.name,
-      slug: data.name.toLowerCase().replace(/\s+/g, "-"),
-      articleCount: 0,
-      createdAt: new Date().toISOString(),
-    };
+  async create(payload: { name: string }): Promise<Tag> {
+    const { data } = await api.post<Tag>("/tags", payload);
+    return data;
   },
 
-  async update(id: string, data: { name: string }): Promise<Tag> {
-    await delay();
-    const tag = dummyTags.find((t) => t._id === id);
-    return {
-      ...tag!,
-      ...data,
-      slug: data.name.toLowerCase().replace(/\s+/g, "-"),
-    };
+  async update(id: string, payload: { name: string }): Promise<Tag> {
+    const { data } = await api.put<Tag>(`/tags/${id}`, payload);
+    return data;
   },
 
-  async delete(_id: string): Promise<void> {
-    await delay();
+  async delete(id: string): Promise<void> {
+    await api.delete(`/tags/${id}`);
   },
 };
 
 // ─── Users ──────────────────────────────────────────────
 export const userService = {
   async getAll(): Promise<User[]> {
-    await delay();
-    return dummyUsers;
+    const { data } = await api.get<User[]>("/users");
+    return data;
   },
 
-  async update(id: string, data: Partial<User>): Promise<User> {
-    await delay();
-    const user = dummyUsers.find((u) => u._id === id);
-    return { ...user!, ...data };
-  },
-
-  async delete(_id: string): Promise<void> {
-    await delay();
+  async delete(id: string): Promise<void> {
+    await api.delete(`/users/${id}`);
   },
 };
 
 // ─── Dashboard ──────────────────────────────────────────
 export const dashboardService = {
-  async getStats(forAuthorId?: string): Promise<DashboardStats> {
-    await delay();
-    if (!forAuthorId) return dummyStats;
-
-    const mine = dummyArticles.filter((a) => a.author._id === forAuthorId);
-    const sorted = [...mine].sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-
-    return {
-      totalArticles: mine.length,
-      totalViews: mine.reduce((sum, a) => sum + a.views, 0),
-      totalCategories: dummyCategories.length,
-      totalUsers: dummyUsers.length,
-      recentArticles: sorted.slice(0, 5),
-    };
+  async getStats(_forAuthorId?: string): Promise<DashboardStats> {
+    const { data } = await api.get<DashboardStats>("/dashboard/stats");
+    return data;
   },
 };

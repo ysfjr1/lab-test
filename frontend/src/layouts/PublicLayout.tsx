@@ -9,7 +9,7 @@ export default function PublicLayout() {
     location.pathname === "/login" || location.pathname === "/register";
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex min-h-screen flex-col bg-gray-50">
       <header className="border-b border-gray-200 bg-white">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link to="/" className="text-xl font-bold text-gray-900">
@@ -44,7 +44,7 @@ export default function PublicLayout() {
         </div>
       </header>
 
-      <main>
+      <main className="flex-1">
         <Outlet />
       </main>
 
