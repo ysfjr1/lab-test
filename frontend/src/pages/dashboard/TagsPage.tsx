@@ -4,8 +4,10 @@ import { tagService } from "@/api/services";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
+import Alert from "@/components/ui/Alert";
 import { TableRowSkeleton } from "@/components/ui/Skeleton";
 import EmptyState from "@/components/ui/EmptyState";
+import { getApiErrorMessage } from "@/utils/apiError";
 
 export default function TagsPage() {
   const [tags, setTags] = useState<Tag[]>([]);
@@ -14,6 +16,12 @@ export default function TagsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setError("");
+  };
 
   useEffect(() => {
     tagService
@@ -25,17 +33,20 @@ export default function TagsPage() {
   const openCreate = () => {
     setEditingId(null);
     setName("");
+    setError("");
     setModalOpen(true);
   };
 
   const openEdit = (tag: Tag) => {
     setEditingId(tag._id);
     setName(tag.name);
+    setError("");
     setModalOpen(true);
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setError("");
     setSaving(true);
     try {
       if (editingId) {
@@ -45,7 +56,9 @@ export default function TagsPage() {
         const created = await tagService.create({ name });
         setTags((prev) => [...prev, created]);
       }
-      setModalOpen(false);
+      closeModal();
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Failed to save tag. Please try again."));
     } finally {
       setSaving(false);
     }
@@ -147,10 +160,11 @@ export default function TagsPage() {
 
       <Modal
         isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={closeModal}
         title={editingId ? "Edit Tag" : "New Tag"}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
+          {error && <Alert>{error}</Alert>}
           <Input
             label="Name"
             value={name}
@@ -162,7 +176,7 @@ export default function TagsPage() {
             <Button
               variant="secondary"
               type="button"
-              onClick={() => setModalOpen(false)}
+              onClick={closeModal}
             >
               Cancel
             </Button>

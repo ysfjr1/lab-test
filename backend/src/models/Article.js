@@ -29,14 +29,13 @@ const articleSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-articleSchema.pre("save", function (next) {
+articleSchema.pre("save", function () {
   if (this.isModified("title")) {
     this.slug =
       slugify(this.title, { lower: true, strict: true }) +
       "-" +
       Date.now().toString(36);
   }
-  next();
 });
 
 articleSchema.methods.toJSON = function () {

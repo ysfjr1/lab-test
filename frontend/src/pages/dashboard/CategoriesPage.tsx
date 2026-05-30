@@ -4,8 +4,10 @@ import { categoryService } from "@/api/services";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
+import Alert from "@/components/ui/Alert";
 import { TableRowSkeleton } from "@/components/ui/Skeleton";
 import EmptyState from "@/components/ui/EmptyState";
+import { getApiErrorMessage } from "@/utils/apiError";
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -15,6 +17,12 @@ export default function CategoriesPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setError("");
+  };
 
   useEffect(() => {
     categoryService
@@ -27,6 +35,7 @@ export default function CategoriesPage() {
     setEditingId(null);
     setName("");
     setDescription("");
+    setError("");
     setModalOpen(true);
   };
 
@@ -34,11 +43,13 @@ export default function CategoriesPage() {
     setEditingId(cat._id);
     setName(cat.name);
     setDescription(cat.description ?? "");
+    setError("");
     setModalOpen(true);
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setError("");
     setSaving(true);
     try {
       if (editingId) {
@@ -53,7 +64,11 @@ export default function CategoriesPage() {
         const created = await categoryService.create({ name, description });
         setCategories((prev) => [...prev, created]);
       }
-      setModalOpen(false);
+      closeModal();
+    } catch (err) {
+      setError(
+        getApiErrorMessage(err, "Failed to save category. Please try again.")
+      );
     } finally {
       setSaving(false);
     }
@@ -161,10 +176,11 @@ export default function CategoriesPage() {
 
       <Modal
         isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={closeModal}
         title={editingId ? "Edit Category" : "New Category"}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
+          {error && <Alert>{error}</Alert>}
           <Input
             label="Name"
             value={name}
@@ -182,7 +198,7 @@ export default function CategoriesPage() {
             <Button
               variant="secondary"
               type="button"
-              onClick={() => setModalOpen(false)}
+              onClick={closeModal}
             >
               Cancel
             </Button>

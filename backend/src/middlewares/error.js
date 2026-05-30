@@ -8,7 +8,14 @@ const errorHandler = (err, _req, res, _next) => {
 
   if (err.code === 11000) {
     const field = Object.keys(err.keyValue)[0];
-    return res.status(409).json({ message: `${field} already exists` });
+    const messages = {
+      name: "This name already exists.",
+      slug: "An entry with this title already exists.",
+      email: "This email is already registered.",
+    };
+    const message =
+      messages[field] ?? `This ${field} is already in use.`;
+    return res.status(409).json({ message });
   }
 
   if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError") {

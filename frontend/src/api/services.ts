@@ -93,10 +93,15 @@ export const articleService = {
   },
 
   async getRelated(articleId: string): Promise<Article[]> {
-    const { data } = await api.get<Article[]>(
-      `/articles/${articleId}/related`
-    );
+    const { data } = await api.get<Article[]>(`/articles/${articleId}/related`);
     return data;
+  },
+
+  async recordView(articleId: string): Promise<number> {
+    const { data } = await api.post<{ views: number }>(
+      `/articles/${articleId}/view`
+    );
+    return data.views;
   },
 
   async create(formData: ArticleFormData): Promise<Article> {
@@ -104,7 +109,10 @@ export const articleService = {
     return data;
   },
 
-  async update(id: string, formData: Partial<ArticleFormData>): Promise<Article> {
+  async update(
+    id: string,
+    formData: Partial<ArticleFormData>
+  ): Promise<Article> {
     const { data } = await api.put<Article>(`/articles/${id}`, formData);
     return data;
   },
@@ -121,7 +129,10 @@ export const categoryService = {
     return data;
   },
 
-  async create(payload: { name: string; description?: string }): Promise<Category> {
+  async create(payload: {
+    name: string;
+    description?: string;
+  }): Promise<Category> {
     const { data } = await api.post<Category>("/categories", payload);
     return data;
   },

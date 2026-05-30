@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import DOMPurify from "dompurify";
 import type { Article } from "@/types";
 import { articleService } from "@/api/services";
+import { shouldRecordArticleView } from "@/utils/viewTracking";
 import Badge from "@/components/ui/Badge";
 import Skeleton from "@/components/ui/Skeleton";
 import ArticleCard from "@/components/blog/ArticleCard";
@@ -20,9 +21,24 @@ export default function ArticleDetailPage() {
     let cancelled = false;
 
     articleService.getBySlug(slug).then(async (a) => {
-      const related = a ? await articleService.getRelated(a._id) : [];
+      if (!a) {
+        if (!cancelled) setDetailState({ slug, article: null, related: [] });
+        return;
+      }
+
+      let article = a;
+      if (shouldRecordArticleView(slug)) {
+        try {
+          const views = await articleService.recordView(a._id);
+          article = { ...a, views };
+        } catch {
+          // View count is non-critical; still show the article
+        }
+      }
+
+      const related = await articleService.getRelated(a._id);
       if (!cancelled) {
-        setDetailState({ slug, article: a ?? null, related });
+        setDetailState({ slug, article, related });
       }
     });
 

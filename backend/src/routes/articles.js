@@ -7,6 +7,7 @@ const router = Router();
 router.get("/", ctrl.getAll);
 router.get("/admin", authenticate, ctrl.getAllAdmin);
 router.get("/slug/:slug", ctrl.getBySlug);
+router.post("/:id/view", ctrl.recordView);
 router.get("/:id/related", ctrl.getRelated);
 router.get("/:id", authenticate, ctrl.getById);
 router.post("/", authenticate, ctrl.create);

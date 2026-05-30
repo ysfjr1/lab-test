@@ -8,6 +8,8 @@ import { articleService, categoryService, tagService } from "@/api/services";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
+import Alert from "@/components/ui/Alert";
+import { getApiErrorMessage } from "@/utils/apiError";
 
 const quillModules = {
   toolbar: [
@@ -30,6 +32,7 @@ export default function ArticleFormPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const [form, setForm] = useState<ArticleFormData>({
     title: "",
@@ -74,6 +77,7 @@ export default function ArticleFormPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setError("");
     setSaving(true);
     try {
       if (isEditing) {
@@ -82,6 +86,10 @@ export default function ArticleFormPage() {
         await articleService.create(form);
       }
       navigate("/dashboard/articles");
+    } catch (err) {
+      setError(
+        getApiErrorMessage(err, "Failed to save article. Please try again.")
+      );
     } finally {
       setSaving(false);
     }
@@ -118,6 +126,8 @@ export default function ArticleFormPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {error && <Alert>{error}</Alert>}
+
         <div className="rounded-xl border border-gray-200 bg-white p-6 space-y-5">
           <Input
             label="Title"

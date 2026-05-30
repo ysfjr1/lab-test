@@ -90,17 +90,30 @@ exports.getAllAdmin = async (req, res) => {
 };
 
 exports.getBySlug = async (req, res) => {
-  const article = await Article.findOneAndUpdate(
-    { slug: req.params.slug, status: "published" },
-    { $inc: { views: 1 } },
-    { new: true }
-  ).populate(populateArticle);
+  const article = await Article.findOne({
+    slug: req.params.slug,
+    status: "published",
+  }).populate(populateArticle);
 
   if (!article) {
     throw new ApiError(404, "Article not found");
   }
 
   res.json(article);
+};
+
+exports.recordView = async (req, res) => {
+  const article = await Article.findOneAndUpdate(
+    { _id: req.params.id, status: "published" },
+    { $inc: { views: 1 } },
+    { new: true }
+  );
+
+  if (!article) {
+    throw new ApiError(404, "Article not found");
+  }
+
+  res.json({ views: article.views });
 };
 
 exports.getById = async (req, res) => {

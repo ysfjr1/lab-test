@@ -9,11 +9,10 @@ const tagSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-tagSchema.pre("save", function (next) {
+tagSchema.pre("save", function () {
   if (this.isModified("name")) {
     this.slug = slugify(this.name, { lower: true, strict: true });
   }
-  next();
 });
 
 tagSchema.methods.toJSON = function () {
