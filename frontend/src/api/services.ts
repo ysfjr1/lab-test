@@ -11,7 +11,7 @@ import type {
 } from "@/types";
 import api from "./axios";
 
-// ─── Auth ───────────────────────────────────────────────
+// Auth
 export const authService = {
   async login(email: string, password: string): Promise<AuthResponse> {
     const { data } = await api.post<AuthResponse>("/auth/login", {
@@ -40,7 +40,7 @@ export const authService = {
   },
 };
 
-// ─── Articles ───────────────────────────────────────────
+// Articles
 export const articleService = {
   async getAll(
     filters: ArticleFilters = {}
@@ -122,7 +122,7 @@ export const articleService = {
   },
 };
 
-// ─── Categories ─────────────────────────────────────────
+// Categories
 export const categoryService = {
   async getAll(): Promise<Category[]> {
     const { data } = await api.get<Category[]>("/categories");
@@ -150,7 +150,7 @@ export const categoryService = {
   },
 };
 
-// ─── Tags ───────────────────────────────────────────────
+// Tags
 export const tagService = {
   async getAll(): Promise<Tag[]> {
     const { data } = await api.get<Tag[]>("/tags");
@@ -172,7 +172,7 @@ export const tagService = {
   },
 };
 
-// ─── Users ──────────────────────────────────────────────
+// Users
 export const userService = {
   async getAll(): Promise<User[]> {
     const { data } = await api.get<User[]>("/users");
@@ -184,9 +184,9 @@ export const userService = {
   },
 };
 
-// ─── Dashboard ──────────────────────────────────────────
+// Dashboard
 export const dashboardService = {
-  async getStats(_forAuthorId?: string): Promise<DashboardStats> {
+  async getStats(): Promise<DashboardStats> {
     const { data } = await api.get<DashboardStats>("/dashboard/stats");
     return data;
   },

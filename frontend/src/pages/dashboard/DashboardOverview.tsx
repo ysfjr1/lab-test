@@ -38,7 +38,7 @@ export default function DashboardOverview() {
     if (!user) return;
     let cancelled = false;
     dashboardService
-      .getStats(user.role === "author" ? user._id : undefined)
+      .getStats()
       .then((data) => {
         if (!cancelled) setStats(data);
       })
